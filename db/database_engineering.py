@@ -25,6 +25,7 @@ conn = engine.connect()
 # Use `declarative_base` from SQLAlchemy to model the crime data as an ORM
 Base = declarative_base()
 
+#Define the schema for the classes
 class CrimeData2017(Base):
     __tablename__ = 'crimedata2017'
     id = Column(Integer, primary_key=True)
@@ -83,6 +84,6 @@ crimedata2017 = sqlalchemy.Table('crimedata2017', metadata, autoload=True)
 crimedata2018 = sqlalchemy.Table('crimedata2018', metadata, autoload=True)
 
 
-#Insert the crimedata2017 (dictionary format) into sqlite
+#Insert the crimedata2017 (dictionary format) into  tables
 conn.execute(crimedata2017.insert(), crimedata2017_dict)
 conn.execute(crimedata2018.insert(), crimedata2018_dict)
