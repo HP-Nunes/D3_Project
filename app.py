@@ -21,8 +21,6 @@ import pandas as pd
 import numpy as np
 import os
 
-
-
 ###########################
 # Flask Setup
 ###########################
@@ -31,14 +29,15 @@ app = Flask(__name__)
 
 #app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', '') or "sqlite:///db/crimedata2017.sqlite"
 
-engine = create_engine("sqlite:///db/crimedata2017.sqlite")
+engine = create_engine("sqlite:///db/crimedata.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
 # reflect the tables
 Base.prepare(engine, reflect=True)
 
-Crime = Base.classes.crimedata2017
+Crime2017 = Base.classes.crimedata2017
+Crime2018 = Base.classes.crimedata2018
 
 #################################################
 # Database Setup
@@ -47,76 +46,53 @@ Crime = Base.classes.crimedata2017
 #db = SQLAlchemy(app)
 session = Session(engine)
 
-
-
 # create route that renders index.html template
 @app.route("/")
 def home():
     return render_template("index.html")
 
-@app.route("/api/crimedata2017")
-def crimedata2017():
+@app.route("/api/crimedata")
+def crimedata():
    
-    all_crimes = []
     #Grab all the columns we need and create a list
-    sel = [Crime.IncidntNum,
-        Crime.Category,
-        Crime.Descript,
-        Crime.DayOfWeek,
-        Crime.Date,
-        Crime.Time,
-        Crime.PdDistrict,
-        Crime.Resolution,
-        Crime.Address,
-        Crime.X,
-        Crime.Y]
+    sel2017 = [Crime2017.IncidntNum,
+        Crime2017.Category,
+        Crime2017.Descript,
+        Crime2017.DayOfWeek,
+        Crime2017.Date,
+        Crime2017.Time,
+        Crime2017.PdDistrict,
+        Crime2017.Resolution,
+        Crime2017.Address,
+        Crime2017.X,
+        Crime2017.Y]
 
-    results = session.query(*sel).all()
+    sel2018 = [Crime2018.IncidntNum,
+        Crime2018.Category,
+        Crime2018.Descript,
+        Crime2018.DayOfWeek,
+        Crime2018.Date,
+        Crime2018.Time,
+        Crime2018.PdDistrict,
+        Crime2018.Resolution,
+        Crime2018.Address,
+        Crime2018.X,
+        Crime2018.Y]    
+
+    results2017 = session.query(*sel2017)
+    results2018 = session.query(*sel2018)
+
+    #Perform a Union All to combine the 2 datasets
+    results = results2017.union_all(results2018).all()
     print(len(results))
-    
+
+    #Store results into a dataframe
     df = pd.DataFrame(results, columns=['IncidntNum','Category','Descript',
                                         'DayOfWeek', 'Date', 'Time', 'PdDistrict',
                                         'Resolution', 'Address', 'X', 'Y'])
 
-
-    # #Create a dictionary to store the values pulled
-    # crimes_dict = {}
-    #Create an empty list to store a dictionary
-
-    # counter = 0
-
-    # for result in results:
-
-    #     all_crimes.append({
-    #         "Incident_Number": result[0],
-    #         "Category":result[1],
-    #         "Description": result[2],
-    #         "DayOfWeek": result[3],
-    #         "Date": result[4],
-    #         "Time": result[5],
-    #         "PdDistrict": result[6],
-    #         "Resolution": result[7],
-    #         "Address": result[8],
-    #         "Lat": result[9],            
-    #         "Long": result[10],            
-    #     })
-    #print(results)
+    #Return the dataframe in json format
     return jsonify(df.to_dict(orient="records"))
-    #     crimes_dict["Incident_Number"] = results[0][1]
-    #     crimes_dict["Description"] = results[0][2]
-    #     crimes_dict["DayOfWeek"] = results[0][2]
-    #     crimes_dict["Date"] = results[0][3]
-    #     crimes_dict["Time"] = results[0][4]
-    #     crimes_dict["PdDistrict"] = results[0][5]
-    #     crimes_dict["Resolution"] = results[0][6]
-    #     crimes_dict["Address"] = results[0][7]
-    #     crimes_dict["Lat"] = results[0][8]
-    #     crimes_dict["Long"] = results[0][9]
-    # all_crimes.append(crimes_dict)
-
-   
-
-    #return jsonify(pet_data)
 
 if __name__ == "__main__":
     app.run(debug=True)
