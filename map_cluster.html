@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Marker Clusters</title>
+
+    <!-- Leaflet JS & CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
+    <!-- The GEOJSON file-->
+    <script src='dataset.js'></script>
+    <!-- d3 JS -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <!-- Marker Cluster JS & CSS -->
+    <script type="text/javascript" src="https://unpkg.com/leaflet.markercluster@1.0.3/dist/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet.markercluster@1.0.3/dist/MarkerCluster.Default.css">
+    <!-- Our CSS -->
+    <link rel="stylesheet" type="text/css" href="style.css">
+    
+
+    <style type='text/css'>
+  
+  body { 
+          margin: 0; 
+          padding: 0; 
+          font-family: Helvetica, sans-serif;
+        }
+        
+        #map {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 100%;
+        }
+        
+        .popupHeader {
+          font-weight: bold;
+          color: gray;
+          font-size: 110%;
+        }
+        
+        .popupDetails {
+          font-weight: normal;
+          color: gray;
+        }
+
+    </style>
+  </head>
+
+  <body>
+
+    <div id="map"></div>
+
+    <script type="text/javascript">
+    /***********************************************
+    SET UP MAP Features
+    ***********************************************/
+   // Mapbox API
+    var mapbox = "https://api.mapbox.com/styles/v1/mapbox/light-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1IjoiaHAtbnVuZXMiLCJhIjoiY2ppZHQzcHZ3MDZhNTNrbngzaXkza29jaCJ9.yJRB2I7604kQwNLwgBsqvg";
+    
+    var map = L.map("map", {
+    center: [37.76,  -122.43],
+    zoom: 12
+    });
+
+    L.tileLayer(mapbox).addTo(map);
+
+    /***********************************************
+    CREATE DATA OVERLAY 
+    ***********************************************/
+    
+    // specify what the circle markers should look like
+
+    var markerStyleClosed = {
+        radius: 8, //size
+        fillColor: '#81DAF5', fillOpacity: 0.8, // fill styles
+        color: 'black', opacity: 0.5, weight: 1 // border styles
+    };
+    var markerStyleOpen = {
+        radius: 12, //size
+        fillColor: '#DF0101', fillOpacity: 0.8, // fill styles
+        color: 'black', opacity: 0.5, weight: 1 // border styles
+    };
+
+
+    // give each data point a text popup containing the details
+    function createPopup(feature, layer) {
+        layer.bindPopup('<span class="popupHeader">' +  feature.properties.Date + '</span><br />' + 
+                        '<span class="popupDetails">' + feature.properties.Street_Address + '<br />' + 
+                                                        feature.properties.Description + '<br />' + 
+                                                        feature.properties.Outcome + '</span>');
+    }
+    
+
+    // function to add data points to map layer with proper styling
+    function markerClusterGroup(feature, latlng) {
+      var markers = L.markerClusterGroup();
+      for (var i = 0; i < feature.length; i++) {
+    // set the data location property to a variable
+    var location = feature[i].location;
+
+    // If the data has a location property...
+    if (location) {
+
+      // Add a new marker to the cluster group and bind a pop-up
+      markers.addLayer(L.marker([location.coordinates[1], location.coordinates[0]])
+        .bindPopup(feature[i].descriptor));
+    }
+
+  }
+
+    
+    // specify how to load the individual features: give each its styling and a text popup
+    // var pointsOptions = {
+    //     onEachFeature: createPopup,
+    //     markerClusterGroup: markerClusterGroup,
+    // };
+
+    // var geojsonLayer = L.geoJson(dataset, markerClusterGroup); 
+    map.addLayer(markers);
+    }
+    // fit the initial map view to the data points
+    // map.fitBounds(geojsonLayer.getBounds());
+    
+    </script>
+
+  </body>
+</html>
